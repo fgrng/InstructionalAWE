@@ -130,3 +130,6 @@ dmypy.json
 
 # Not yet structured binary files
 data/_inbox
+
+# Privet project-related notes
+doc/notes.txt
