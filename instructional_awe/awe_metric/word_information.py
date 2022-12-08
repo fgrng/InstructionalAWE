@@ -1,301 +1,389 @@
-from metrics.descriptives import Words
-import pyphen
+# word_information.py - Provides metrics based on word information.
+#
+# Implements WRDNOUN, WRDVORB, WRDARJ, WRDADV, WRDPRO, WRDPRP[1-3], WRDFRQ, WRDAOA, WRDFAM, WRDCNC, FRDIMG, WRDMEA, WRDPOL, WRDHYP
+
+
+# from metrics.descriptives import Words
+import statistics
+import time
+
+from ..awe_foreign.dwds import DWDS
+from ..awe_foreign.babelnet import BabelNet
+
+# Configure Logging
+import logging, sys, os
+logging.basicConfig(stream=sys.stderr)
+LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()
+logging.basicConfig(level=LOGLEVEL)
+logger = logging.getLogger(__name__)
 
 # Basice Word Count Indices
 
-class VerbIncidence(Words):
+# Using HanoverTagger for POS-Tagging.
+# No Tag-Documantation specific for HanTa given. We are using the
+# Stuttgart-Tübingen Tagset (STTS) here and hope the best:
+#   https://www.cis.lmu.de/~schmid/tools/TreeTagger/data/STTS-Tagset.pdf
+# See also:
+#   https://textmining.wp.hs-hannover.de/Preprocessing.html
+#   https://github.com/wartaal/HanTa
+#   https://github.com/wartaal/HanTa/blob/master/Demo.ipynb
+
+# Matching Tags for standard PoS.
+# ===============================
+# Matching tags for adjectives (also: starts with "ADJ")
+adjective_tags = ["ADJA", "ADJD"]
+# Matching tags for adverbs
+adverb_tags = ["ADV"]
+# Matching tags for adposations (also: starts with "AP")
+adposition_tags = ["APPR", "APPRART", "APPO", "APZR"]
+# Matching tags for artiles
+article_tags = ["ART"]
+# Matching tags for cardinal numbers
+cardinal_tags = ["CARD"]
+# Matching tags for foreign material
+foreign_tags = ["FM"]
+# Matching tags for interjections
+interjection_tags = ["ITJ"]
+# Matching tag for conjunctions (also: starts with KO)
+conjunction_tags = ["KOUI", "KOUS", "KON", "KOKOM"]
+# Matching tags for nouns (also: starts with N).
+noun_tags = ["NN", "NE"]
+# Matching tags for pronouns
+# (also: starts with "P", but second char is not "T"
+# or: starts with ["PD", "PI", "PP", "PW"]).
+pronoun_tags = ["PDS", "PDAT", "PIS", "PIAT", "PIDAT", "PPER", "PPOSS", "PPOSAT", "PRELS", "PRELAT", "PRF", "PWS", "PWAT", "PWAV", "PAV"]
+# Matching tags for particles (also: starts with "PT")
+particle_tags = ["PTKZU", "PTKNEG", "PTKVZ", "PTKANT", "PTKA"]
+# Matching tags for "Kompositions-Erstglied"
+trunc_tags = ["TRUNC"]
+# Matching tags for verbs (also starts with "V")
+verb_tags = ["VVFIN", "VVIMP", "VVINF", "VVIZU", "VVPP", "VAFIN", "VAIMP", "VAINF", "VAPP", "VMFIN", "VMINF", "VMPP"]
+# Matching tags for lexical verbs (also starts with "VV")
+lexical_verb_tags = ["VVFIN", "VVIMP", "VVINF", "VVIZU", "VVPP"]
+# Matching tags for auxiliary verb (also start with "VA")
+auxiliary_verb_tags = ["VAFIN", "VAIMP", "VAINF", "VAPP"] 
+# Matching tag for modal verbs (also starts with "VM")
+modal_verb_tags = ["VMFIN", "VMINF", "VMPP"]
+# Matching tags for non-words
+nonword_tags = ["XY"]
+# Matching tags for punctuation (also starts with "$")
+punctuation_tags = ["$.", "$,", "$("]
+
+# Matching Tags  for specific PoS-metrics
+# =======================================
+# Matching pronoun tags for argument overlap.
+argument_pronoun_tags = ["PDS", "PIS", "PWS", "PPER" ]
+# Matching tags for content words.
+#   Via Wikipedia (Autosemantikum): „Wortarten, die Autosemantika enthalten können,
+#   sind Substantive, [Voll-]Verben, Adjektive, Adverbien. Es gibt in diesen aber
+#   verschiedentlich auch Elemente, die Synsemantika sind, z. B. Hilfsverben.
+#   Dagegen sind Artikel, Konjunktionen, Subjunktionen und Präpositionen
+#   in der Regel synsemantisch.“
+content_word_tags = noun_tags + lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
+non_noun_content_word_tags = lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
+# Matching words for function words.
+#   Via Wikipedia (Synsemantikum): „Zu ihnen zählen Artikel, Konjunktionen, Partikel,
+#   Pronomen, Präpositionen, Modalverben und Hilfsverben“
+function_word_tags = article_tags + conjunction_tags + particle_tags + pronoun_tags + adposition_tags + modal_verb_tags + auxiliary_verb_tags
+
+# Helper functions for word counting.
+# ===================================
+
+def pos_list_for_tags(text, taglist = [], taglevel = 0):
+    """Returns list of tags
+    """
+    if taglevel == 0:
+        return [tag for tag in text.tagged_words(taglevel) if tag in taglist]
+    if taglevel == 1 or taglevel == 2:
+        return [tag for tag in text.tagged_words(taglevel) if tag[2] in taglist]
+    if taglevel >= 3:
+        return [tag for tag in text.tagged_words(taglevel) if tag[3] in taglist]
+
+def wordcount_for_tags(text, taglist = []):
+    return len(pos_list_for_tags(text, taglist))
+
+def wordcount_total(text):
+    pos_list_all_words = [tag for tag in text.tagged_words(taglevel = 0) if tag not in nonword_tags]
+    return len(pos_list_all_words)
+
+def incidence_for_tags(text, taglist = [], per = 1000):
+    """Returns incidence value for words in taglist for given population size.
+    """
+    count = wordcount_for_tags(text, taglist)
+    population = wordcount_total(text)
+    return incidence(count, population, per)
+
+def incidence(count, population, per):
+    return (count / population) * per
+
+# Incidence Values for words / parts of speech.
+# =============================================
+
+def verb_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = verb_tags
+    return incidence_for_tags(text, taglist, per = 1000)
+
+def noun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
     """
     """
-    def __init__(self, name='Verb incidence',
-                 column_name='verbs'):
-        super(VerbIncidence, self).__init__(name, column_name)
+    """
+    taglist = noun_tags
+    return incidence_for_tags(text, taglist, per = 1000)
 
-    def value(self):
-        return self.n_verbs() / self.n_words()
+def adjective_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = adjective_tags
+    return incidence_for_tags(text, taglist, per = 1000)
 
-    def n_verbs(self):
-        return len(self._pos_verbs())
+def adverb_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = adverb_tags
+    return incidence_for_tags(text, taglist, per = 1000)
 
-    def _pos_verbs(self):
-        # For explicit comparison:
-        #   verbs = ["VVFIN", "VVIMP", "VVINF", "VVIZU", "VVPP", "VAFIN", "VAIMP", "VAINF", "VAPP", "VMFIN", "VMINF", "VMPP"]
-        #   return [tag for tag in self._pos_all if tag in verbs]
-        return [tag for tag in self._pos_all() if tag[0] == "V"]
+def pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    return incidence_for_tags(text, taglist, per = 1000)
 
-class NounIncidence(Words):
+def content_word_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = content_word_tags
+    return incidence_for_tags(text, taglist, per = 1000)
+
+def function_word_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = function_word_tags
+    return incidence_for_tags(text, taglist, per = 1000)
+
+# Incidence Values for words / parts of speech (graduated).
+# =========================================================
+
+def first_person_singular_pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    pos_list = pos_list_for_tags(text, taglist, taglevel = 1)
+    matching_list = ["ich", "mich", "mir", "meiner"]
+    count = len([tag for tag in pos_list if tag[0] in matching_list])
+    population = wordcount_total(text)
+    return incidence(count, population, per = 1000)
+
+def first_person_plural_pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    pos_list = pos_list_for_tags(text, taglist, taglevel = 1)
+    matching_list = ["wir", "uns", "unser"]
+    count = len([tag for tag in pos_list if tag[1] in matching_list])
+    population = wordcount_total(text)
+    return incidence(count, population, per = 1000)
+
+def second_person_pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    pos_list = pos_list_for_tags(text, taglist, taglevel = 1)
+    # Use explicit word (not stem or lemma).
+    matching_list = ["du", "dich", "dir", "deiner", "Du", "Dich", "Dir", "Deiner"]
+    # matching_list += ["ihr", "euch", "euer", "eu", "Ihr", "Euch", "Euer", "Eu"]
+    count = len([tag for tag in pos_list if tag[0] in matching_list])
+    population = wordcount_total(text)
+    return incidence(count, population, per = 1000)
+
+def third_person_singular_pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    pos_list = pos_list_for_tags(text, taglist, taglevel = 1)
+    # Use explicit word (not stem or lemma).
+    matching_list = ["er", "sie", "es", "ihn", "ihm", "seiner", "ihrer"]
+    count = len([tag for tag in pos_list if tag[0] in matching_list])
+    population = wordcount_total(text)
+    return incidence(count, population, per = 1000)
+
+def third_person_plural_pronoun_incidence(text):
+    """Returns the relative frequency of the given word category by
+    counting the number of instances of the category per 1000 words
+    of text.
+    """
+    taglist = pronoun_tags
+    pos_list = pos_list_for_tags(text, taglist, taglevel = 1)
+    # Use explicit word (not stem or lemma).
+    matching_list = ["sie","Sie", "ihnen", "Ihnen", "ihrer", "Ihrer"]
+    count = len([tag for tag in pos_list if tag[0] in matching_list])
+    population = wordcount_total(text)
+    return incidence(count, population, per = 1000)
+
+# Word Frequency
+# ==============
+
+def celex_word_frequency_content_words(text):
+    """Returns the mean word frequency for content words.
+
+    Coc-Metrix uses CELEX. We are using DWDS.
+    """
+    content_words = pos_list_for_tags(text, taglist = content_word_tags, taglevel = 1)
+    content_words = [tag[0] for tag in content_words]
+    dw = DWDS()
+    freqs = list()
+    logger.debug("Starting requests for DWDS")
+    for word in content_words:
+        logger.debug("Get frequency from DWDS for '%s'" % word)
+        r = dw.get_frequency(word)
+        freq = (int(r['hits']) / int(r['total'])) * 1000000
+        freqs.append(freq)
+        time.sleep(0.2)
+    return statistics.mean(freqs)
+
+def celex_log_frequency_all_words(text):
+    """Returns the mean of the logarithms of word frequency for all words.
+
+    Coc-Metrix uses CELEX. We are using DWDS.
+    """
+    all_words = [tag for tag in text.tagged_words(taglevel = 1) if tag not in nonword_tags]
+    all_words = [tag[0] for tag in all_words]
+    dw = DWDS()
+    logs = list()
+    logger.debug("Starting requests for DWDS")
+    for word in all_words:
+        logger.debug("Get frequency from DWDS for '%s'" % word)
+        r = dw.get_frequency(word)
+        log = float(r['frequency'])
+        logs.append(log)
+        time.sleep(0.2)
+    return statistics.mean(logs)
+
+def celex_min_frequency_content_words(text):
+    """Returns the average minimum logarithmic
+    frequency for content words across sentences.
+
+    Coh-Metrixs uses CELEX. We are usung DWDS.
+    """
+    dw = DWDS()
+    mins = list()
+    for sentence in text.tagged_sentences():
+        content_words = [tag[0] for tag in sentence if tag in content_word_tags]
+        freqs = list()
+        for word in content_words:
+            logger.debug("Get frequency from DWDS for '%s'" % word)
+            r = dw.get_frequency(word)
+            log = float(r['frequency'])
+            freqs.append(log)
+            time.sleep(0.2)
+        # Collect smallest frequency of function word in sentence, if list is not empty.
+        if freqs:
+            mins.append(min(freqs))
+
+    return statistics.mean(mins)
+
+# Psychological Ratings
+# =====================
+
+def age_acquisition_content_words(text):
     """
     """
-    def __init__(self, name='Noun incidence',
-                 column_name='nouns'):
-        super(NounIncidence, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        return self.n_nouns() / self.n_words()
-
-    def n_nouns(self):
-        return len(self._pos_nouns())
-
-    def _pos_nouns(self):
-        return [tag for tag in self._pos_all() if tag[0] == "N"]
-
-class AdjectiveIncidence(Words):
+def familiarity_content_words(text):
     """
     """
-    def __init__(self, name='Adjective incidence',
-                 column_name='adjectives'):
-        super(AdjectiveIncidence, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        return self.n_adjectives() / self.n_words()
-
-    def n_adjectives(self):
-        return len(self._pos_adjectives())
-
-    def _pos_adjectives(self):
-        return [tag for tag in self._pos_all() if tag[0:2] == "ADJ"]
-
-class AdverbIncidence(Words):
+def concreteness_content_words(text):
     """
     """
-    def __init__(self, name='Adjective incidence',
-                 column_name='adverbs'):
-        super(AdverbIncidence, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        return self.n_adverbs() / self.n_words()
-
-    def n_adverbs(self):
-        return len(self._pos_adverbs())
-
-    def _pos_adverbs(self):
-        return [tag for tag in self._pos_all() if tag[0:2] == "ADV"]
-
-class PronounIncidence(Words):
+def imagability_content_words(text):
     """
     """
-    def __init__(self, name='Pronoun incidence',
-                 column_name='pronouns'):
-        super(PronounIncidence, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        return self.n_pronouns() / self.n_words()
-
-    def n_pronouns(self):
-        return len(self._pos_pronouns())
-
-    def _pos_pronouns(self):
-        # Pronomen aber keine Partikel.
-        return [tag for tag in self._pos_all() if (tag[0] == "P" and tag[0:1] != "PT")]
-
-class FirstPersonSingularPronounIncidence(Words):
+def meaningfulness_colorodo_content_words(text):
     """
     """
-    def __init__(self, name='First person singular pronoun incidence',
-                 column_name='1st_sing_incidence'):
-        super(FirstPersonSingularPronounIncidence, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
 
-class FirstPersonPluralPronounIncidence(Words):
-    """
-    """
-    def __init__(self, name='First person plural pronoun incidence',
-                 column_name='1st_plural_incidence'):
-        super(FirstPersonPluralPronounIncidence, self).__init__(name, column_name)
+# Psychological Ratings
+# =====================
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
+def polysemy_content_words(text):
+    """
+    """
+    # TODO
+    raise NotImplementedError
 
-class SecondPersonPronounIncidence(Words):
-    """
-    """
-    def __init__(self, name='Second person pronoun incidence',
-                 column_name='2nd_person_incidence'):
-        super(SecondPersonPronounIncidence, self).__init__(name, column_name)
+def hypernymy_nouns(text):
+    """Provides estimates of hypernymy for nouns in the text.
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
+    A hypernym is denotes a supertype in semantic relationships.
+    """
+    nouns = pos_list_for_tags(text, taglist = noun_tags, taglevel = 1)
+    nouns = [tag[1] for tag in nouns]
 
-class ThirdPersonSingularPronounIncidence(Words):
-    """
-    """
-    def __init__(self, name='First person singular pronoun incidence',
-                 column_name='1st_sing_incidence'):
-        super(FirstPersonSingularPronounIncidence, self).__init__(name, column_name)
+    from wiktionaryparser import WiktionaryParser
+    parser = WiktionaryParser()
+    parser.url = "https://de.wiktionary.org/wiki/{}?printable=yes"
+    parser.set_default_language("german")
+    parser.include_part_of_speech("noun")
+    parser.include_relation("hypernyms")
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
+    #for noun in nouns:
+    noun = nouns[0]
+    results = parser.fetch(noun)
+    for result in results:
+        #     for definition in result["definitions"]:
+        #         hypernyms = [ hy["words"] for hy in definition["relatedWords"] if hy["relationshipType"] == "hypernyms" ]
+        print(noun, ":", result)
 
-class ThirdPersonPluralPronounIncidence(Words):
-    """
-    """
-    def __init__(self, name='Third person plural pronoun incidence',
-                 column_name='3rd_plural_incidence'):
-        super(FirstPersonPluralPronounIncidence, self).__init__(name, column_name)
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
+def hypernymy_verbs(text):
+    """Provides estimates of hypernymy for verbs in the text.
+    A hypernym is denotes a supertype in semantic relationships.
+    """
+    # TODO
+    raise NotImplementedError
 
-class CelexWordFrequencyContentWords(Words):
+def hypernymy_nouns_and_verbs(text):
+    """Provides estimates of hypernymy for nouns and verbs in the text.
+    A hypernym is denotes a supertype in semantic relationships.
     """
-    """
-    def __init__(self, name='CELEX word frequency for content words, mean',
-                 column_name='CELEX freq content words'):
-        super(CelexWordFrequencyContentWords, self).__init__(name, column_name)
+    # TODO
+    raise NotImplementedError
 
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class CelexLogFrequencyContentWords(Words):
-    """
-    """
-    def __init__(self, name='CELEX log frequency for all words, mean',
-                 column_name='CELEX log all words'):
-        super(CelexLogFrequencyContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class CelexMinFrequencyContentWords(Words):
-    """
-    """
-    def __init__(self, name='CELEX Log minimum frequency for content words, mean',
-                 column_name='CELEX min content words'):
-        super(CelexMinFrequencyContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class AgeAcquisitionContentWords(Words):
-    """
-    """
-    def __init__(self, name='Age of acquisition for content words, mean',
-                 column_name='Acquisition age content words'):
-        super(AgeAcquisitionContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class FamiliarityContentWords(Words):
-    """
-    """
-    def __init__(self, name='Familiarity for content words, mean',
-                 column_name='Familiarity content words'):
-        super(FamiliarityContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-        
-class ConcretenessContentWords(Words):
-    """
-    """
-    def __init__(self, name='Concreteness for content words, mean',
-                 column_name='Concreteness content words'):
-        super(ConcretenessContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class ImagabilityContentWords(Words):
-    """
-    """
-    def __init__(self, name='Imagability for content words, mean',
-                 column_name='Imagability content words'):
-        super(ImagabilityContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-    
-class MeaningfulnessColorodoContentWords(Words):
-    """
-    """
-    def __init__(self, name='Meaningfulness Colorodo norms for content words, mean',
-                 column_name='Meaningfulness content words'):
-        super(MeaningfulnessColorodoContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class PolysemyContentWords(Words):
-    """
-    """
-    def __init__(self, name='Polysemy for content words, mean',
-                 column_name='Polysemy content words'):
-        super(PolysemyContentWords, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class HypernymyNouns(Words):
-    """
-    """
-    def __init__(self, name='Hypernymy for nouns',
-                 column_name='Hypernymy nouns'):
-        super(HypernymyNouns, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class HypernymyVerbs(Words):
-    """
-    """
-    def __init__(self, name='Hypernymy for verbs',
-                 column_name='Hypernymy verbs'):
-        super(HypernymyVerbs, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class HypernymyNounsAndVerbs(Words):
-    """
-    """
-    def __init__(self, name='Hypernymy for nouns and verbs',
-                 column_name='Hypernymy n+v'):
-        super(HypernymyNounsAndVerbs, self).__init__(name, column_name)
-
-    def value(self):
-        # TODO
-        raise NotImplementedError
-
-class ContentWordIncidence(Words):
-    """
-    """
-    def __init__(self, name='Content word incidence',
-                 column_name='content_words'):
-        super(ContentWordIncidence, self).__init__(name, column_name)
-
-    def value(self):
-        raise NotImplementedError
-        # content_words = filter(pos_tagger.poset.is_content_word,
-        #                        t.tagged_words)
-        # return ilen(content_words) / ilen(t.all_words)
-
-class FunctionWordIncidence(Words):
-    """
-    """
-    def __init__(self, name='Function word incidence',
-                 column_name='function_words'):
-        super(FunctionWordIncidence, self).__init__(name, column_name)
-
-    def value(self):
-        raise NotImplementedError
-        # function_words = filter(pos_tagger.poset.is_function_word,
-        #                         t.tagged_words)
-        # return ilen(function_words) / ilen(t.all_words)
