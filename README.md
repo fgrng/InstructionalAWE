@@ -292,7 +292,11 @@ Die lexikalische Diversität bezieht sich auf die Anzahl an eindeutigen Wörtern
     ```
     Mit Blick auf die Dokumentation von Coh-Metrix ist mir nicht klar, ob es hier Sinn ergibt, wirklich alle Vorkommen einzelner Wörter einzeln zu zählen. Mit dem Parameter `use_lemmatized_words = True` kann die Wortzählung daher auf Basis der Wordstämme durchgeführt werden. Die Type-Token-Relation kann für alle Wörter oder nur für *Content Words* berechnet werden. Mit dem Parameter `use_content_words = True` erfolgt hierfür die Auswahl. Die TTR ist mit der Textlänge korreliert / konfundiert.
 - Die Funktion `mtld(text, …)` berechnet das *MTLD* (measure of textual lexical diversity). Die Implementierung habe ich [von *kristopherkyle* übernommen](https://github.com/kristopherkyle/lexical_diversity). Das MLTD geht auf McCarthy and Jarvis (2007, 2010) zurück. Die Schätzung der lexikalischen Diversität mit dem *MTLD* ist weniger bis kaum von der Textlänge beeinflusst.
+    > MTLD is calculated as the mean length of sequential word strings in a text that maintain a given TTR value. 
+    > (McNamara et al., 2014, S. 67)
 - Die Funktion `vocd(text, …)` schätzt lexikalische Diversität auf Basis von zufälligen Wörter-Samples. Die Implementierung habe ich [von *kristopherkyle* übernommen](https://github.com/kristopherkyle/lexical_diversity). Das *vocd* geht auf McCarthy and Jarvis (2007, 2010** zurück.Die Schätzung der lexikalischen Diversität mit dem *vocd* ist zum Teil weniger von der Textlänge beeinflusst.
+    > The index produced by vocd is calculated through a computational procedure that fits TTR random samples with ideal TTR curves.
+    > (McNamara et al., 2014, S. 67)
 
 ### Konjunktionen / Connectves
 
