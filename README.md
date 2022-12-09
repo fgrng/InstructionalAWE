@@ -13,6 +13,10 @@ McNamara, D. S., Graesser, A. C., McCarthy, P. M., & Cai, Z. (2014). Automated e
 
 Graesser, A. C., & McNamara, D. S. (2011). Computational Analyses of Multilevel Discourse Comprehension. Topics in Cognitive Science, 3(2), 371–398. 
 
+McCarthy, P.M., Jarvis, S. MTLD, vocd-D, and HD-D. (2010). A validation study of sophisticated approaches to lexical diversity assessment. Behavior Research Methods 42, 381–392. Verfügbar unter: https://doi.org/10.3758/BRM.42.2.381
+
+McCarthy, P. M., & Jarvis, S. (2007). vocd: A theoretical and empirical evaluation. Language Testing, 24(4), 459–488. Verfügbar unter: https://doi.org/10.1177/0265532207080767
+
 Charbonnier, J., & Wartena, C. (2020). Predicting the concreteness of German Words. In SWISSTEXT & KONVENS 2020: Swiss Text Analytics Conference & Conference on Natural Language Processing 2020; Proceedings of the 5th Swiss Text Analytics Conference (SwissText) & 16th Conference on Natural Language Processing (KONVENS), CEUR Workshop Proceedings Vol. 2624. Verfügbar unter: https://doi.org/10.25968/opus-2075 
 
 ### Ressourcen
@@ -90,7 +94,8 @@ Das Modul `word_information` implementiert WRDNOUN, WRDVORB, WRDARJ, WRDADV, WRD
 - Zusätzlich kann die Inzidenz von *Content Words* und *Function Words* bestimmt werden. *Content Words* habe ich für die deutsche Sprache grob als Autosemantika verstanden; *Function Words* entsprechend als Synsemantika, und wie folgt implementiert: 
     ```python
     content_word_tags = noun_tags + lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
-    ```bzw. 
+    ```
+    bzw. 
     ```python
     function_word_tags = article_tags + conjunction_tags + particle_tags + pronoun_tags + adposition_tags + modal_verb_tags + auxiliary_verb_tags
     ```
@@ -223,7 +228,7 @@ Für die Silbenanzahlen, die für die Berechnung der Lesbarkeitsindizes benötig
 
 ### Referenzielle Kohäsion (Rekurrenz)
 
-Referenzielle Kohäsion oder Rekorrunz ist eine Möglichkeit um auf Textoberflächenebene den syntaktisch-semantischen Zusammenhang zu erhöhen und so die Textkohäsion zu verbessern. Im Sinner der Coh-Metrix werden referenzielle Kohäsionswerte auf Basis von wiederkehrenden Worten oder Wortbestandteilen berechnet.
+Referenzielle Kohäsion oder Rekurrenz ist eine Möglichkeit um auf Textoberflächenebene den syntaktisch-semantischen Zusammenhang zu erhöhen und so die Textkohäsion zu verbessern. Im Sinner der Coh-Metrix werden referenzielle Kohäsionswerte auf Basis von wiederkehrenden Worten oder Wortbestandteilen berechnet.
 
 > Referential cohesion refers to overlap in content words between local sentences, or coreference. […] coreference is a linguaistic cue that can aid readers in making connections […] in their textbase understanding. 
 > (McNamara et al., 2014, S. 63ff)
@@ -239,7 +244,7 @@ Die nötigen Wortartenerkennungen werden mit Hilfe des HanoverTagger durchgefüh
 Die Rekurrenz von *Content Words* wird gemäß der Coh-Metrix Webtool Dokumentation anders berechnet.
 
 > This measure considers the proportion of explicit content words that overlap between pairs of sentences. For example, if a sentence pair has fewer words and two words overlap, the proportion is greater than if a pair has many words and two words overlap.
-> Quelle: http://cohmetrix.com/, Documentation
+> (Quelle: http://cohmetrix.com/, Documentation)
 
 Das wird vermutlich nicht 100% der Originalimplementierung entsprechen; ich habe mich jedoch für folgende Umsetzung entschieden. Den Anteil an überlappenden *Content Words* bestimme ich im Vergleich zu der Anzahl an insgesamt vorliegenden *Content Words* in beiden Vergleichssätzen zusammen.
 
@@ -277,7 +282,17 @@ Das ist so noch nicht implementiert. In der jetzigen Version wird jeder Satzverg
 
 ### Lexikalische Diversität
 
-**TODO**
+Die lexikalische Diversität bezieht sich auf die Anzahl an eindeutigen Wörtern (**types*) im Vergleich zu der Gesamtanzahl an Wörtern in einem Text (*tokens*). Das Modul `lexical_diversity` implementiert LDTTR, LDMTLD, LDVOCD.
+
+- Die Funktion `type_token_ratio(text, …)` bestimmt die Type-Token-Relation (TTR). Dabei wird die Anzahl an eindeutigen Wörten gezählt und durch die Anzahl aller Wörter geteilt.
+    ```python
+        n_tokens = len(list_of_words)
+        n_types = len(set(list_of_words))
+        return n_types / n_tokens
+    ```
+    Mit Blick auf die Dokumentation von Coh-Metrix ist mir nicht klar, ob es hier Sinn ergibt, wirklich alle Vorkommen einzelner Wörter einzeln zu zählen. Mit dem Parameter `use_lemmatized_words = True` kann die Wortzählung daher auf Basis der Wordstämme durchgeführt werden. Die Type-Token-Relation kann für alle Wörter oder nur für *Content Words* berechnet werden. Mit dem Parameter `use_content_words = True` erfolgt hierfür die Auswahl. Die TTR ist mit der Textlänge korreliert / konfundiert.
+- Die Funktion `mtld(text, …)` berechnet das *MTLD* (measure of textual lexical diversity). Die Implementierung habe ich [von *kristopherkyle* übernommen](https://github.com/kristopherkyle/lexical_diversity). Das MLTD geht auf McCarthy and Jarvis (2007, 2010) zurück. Die Schätzung der lexikalischen Diversität mit dem *MTLD* ist weniger bis kaum von der Textlänge beeinflusst.
+- Die Funktion `vocd(text, …)` schätzt lexikalische Diversität auf Basis von zufälligen Wörter-Samples. Die Implementierung habe ich [von *kristopherkyle* übernommen](https://github.com/kristopherkyle/lexical_diversity). Das *vocd* geht auf McCarthy and Jarvis (2007, 2010** zurück.Die Schätzung der lexikalischen Diversität mit dem *vocd* ist zum Teil weniger von der Textlänge beeinflusst.
 
 ### Konjunktionen / Connectves
 

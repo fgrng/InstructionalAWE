@@ -32,8 +32,6 @@
 #   in a paragraph. When all possible pairs of sentences are considered, there is the distinction
 #   between weighted and unweighted metrics that are sensitive to the distance between sentences.“
 
-from .metric import Metric
-
 import pyphen
 import statistics
 import nltk
