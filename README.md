@@ -7,6 +7,46 @@ Dieses Projekt re-implementiert unter Anderem einige der Berechnungsfunktionen f
 
 Die hier implementierten Berechnungsfunktionen wurden auf Basis der Beschreibungen in McNamara et al. (2014) entworfen. Teilweise wurde auf andere Quellen zurückgegriffen. Bei der Projektstruktur habe ich mich an [„Coh-Metrix-Port“](https://github.com/nilc-nlp/coh-metrix-port) von Andre Luiz Verucci da Cunha (Copyright (C) 2014, published under GNU General Public License as published by the Free Software Foundation) orientiert.
 
+### Quellen
+
+McNamara, D. S., Graesser, A. C., McCarthy, P. M., & Cai, Z. (2014). Automated evaluation of text and discourse with Coh-Metrix. Cambridge University Press.
+
+Graesser, A. C., & McNamara, D. S. (2011). Computational Analyses of Multilevel Discourse Comprehension. Topics in Cognitive Science, 3(2), 371–398. 
+
+Charbonnier, J., & Wartena, C. (2020). Predicting the concreteness of German Words. In SWISSTEXT & KONVENS 2020: Swiss Text Analytics Conference & Conference on Natural Language Processing 2020; Proceedings of the 5th Swiss Text Analytics Conference (SwissText) & 16th Conference on Natural Language Processing (KONVENS), CEUR Workshop Proceedings Vol. 2624. Verfügbar unter: https://doi.org/10.25968/opus-2075 
+
+### Ressourcen
+
+- [Coh-Metrx Webtool](http://cohmetrix.com/)
+- [Coh-Metrix-Port 2.0](https://github.com/nilc-nlp/coh-metrix-port)
+
+- Artikel [Vorverarbeitung von Texten mit Python und NLTK](https://textmining.wp.hs-hannover.de/Preprocessing.html) von Christian Wartena(?)
+- [Deutsches Wortart-Tagset STTS](https://www.cis.lmu.de/~schmid/tools/TreeTagger/data/STTS-Tagset.pdf)
+- [Hanover-Tagger „HanTa“](https://github.com/wartaal/HanTa)
+
+- [German dictionaries for Hunspell](https://www.j3e.de/ispell/igerman98/index_en.html)
+
+### Weitere Ressourcen
+
+[German-NLP](https://github.com/adbar/German-NLP). „Curated list of open-access/open-source/off-the-shelf resources and tools developed with a particular focus on German“.
+
+Morphologie und Wortartenerkennung
+- [clevertagger](https://github.com/rsennrich/clevertagger). Mögliche Alternative für den Hanover-Tagger.
+- [The Zurich Morphological Analyzer for German](https://pub.cl.uzh.ch/users/sennrich/zmorge/)
+- [DEMorphy](https://github.com/DuyguA/DEMorphy).
+
+Ein paar Sammlungen für Textcorpora und Wortdatenbanken
+- [Textsammlungen und Datenbanken zur Verwendung des Deutschen – Materialien für Korpuslinguistik, Sprachwissenschaft und Sprachunterricht (DaF & DaZ)](https://www.sprache-spiel-natur.de/2020/06/14/textsammlungen-und-datenbanken-zur-verwendung-des-deutschen/) aus „Sprache, Spiel Natur“
+- [TIGER Korpus](https://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/tiger/)
+- [dlexDB](http://alpha.dlexdb.de/pages/api/)
+- [COSMAN II](https://cosmas2.ids-mannheim.de/cosmas2-web/) vom Leibniz-Institut für deutsche Sprache und Zugang zu den Korpora geschriebener Gegenwartssprache des IDS (DeReKo)
+- [GermaNet](https://uni-tuebingen.de/en/faculties/faculty-of-humanities/departments/modern-languages/department-of-linguistics/chairs/general-and-computational-linguistics/ressources/lexica/germanet/). Lexikalisch-semantisches Wortnetz der Universität Tübingen.
+
+Analyse von Grammatik und Syntax
+- [The Zurich Dependency Parser for German](https://github.com/rsennrich/parzu) für die Analyse von Satzstrukturen
+- [BitPar](https://www.cis.lmu.de/~schmid/tools/BitPar/). Ein Grammatik-Parser (auch) für die deutsche Sprache.
+- [jwcdg](https://gitlab.com/nats/jwcdg) „is a constraint-based dependency parser for natural language sentences“.
+
 ## Installation und Bedienung 
 
 TODO
@@ -36,7 +76,7 @@ Die Klasse ermöglicht Wortartenerkennung, Stemming und Lemmatisierung und verwe
 ### Deskriptive Oberflächenmerkmale
 
 > „Coh-Metrix provides descriptive indices to help the user check the Coh-Metrix output (e.g., to make sure that the numbers make senes) and interpret patterns of data.
-> McNamara et al. (2014, S. 61ff)
+> (McNamara et al., 2014, S. 61ff)
 
 Das Modul `descriptives` implementiert die Indikatoren DESPC, DESSC, DESWC, DESPL, DESSL, DESWL von Coh-Metrix.
 
@@ -51,14 +91,14 @@ Das Modul `word_information` implementiert WRDNOUN, WRDVORB, WRDARJ, WRDADV, WRD
 
 - Das Modul erlaubt die Berechnung der Inzidenz von Verben, Nomen, Adjektiven, Adverben und Pronomen.
 - Zusätzlich kann die Inzidenz von *Content Words* und *Function Words* bestimmt werden. *Content Words* habe ich für die deutsche Sprache grob als Autosemantika verstanden; *Function Words* entsprechend als Synsemantika, und wie folgt implementiert: 
-```python
-content_word_tags = noun_tags + lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
-```
-bzw. 
-```python
-function_word_tags = article_tags + conjunction_tags + particle_tags + pronoun_tags + adposition_tags + modal_verb_tags + auxiliary_verb_tags
-```
-.
+    ```python
+    content_word_tags = noun_tags + lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
+    ```
+    bzw. 
+    ```python
+    function_word_tags = article_tags + conjunction_tags + particle_tags + pronoun_tags + adposition_tags + modal_verb_tags + auxiliary_verb_tags
+    ```
+    .
 - Für die Berechnungen von Promonen-Inzidenzen habe ich adhoc von Hand Matching-Lister erstellt, etwa `matching_list = ["du", "dich", "dir", "deiner", "Du", "Dich", "Dir", "Deiner"]` für die Inzidenz von Pronomen der zweiten Person in `second_person_pronoun_incidence(text)`.
 ```python
 def first_person_singular_pronoun_incidence(text):
@@ -133,7 +173,7 @@ Für die Silbenanzahlen, die für die Berechnung der Lesbarkeitsindizes benötig
 #### Lesbarkeitsindex LIX
 
 > Eine sehr populäre Formel wurde von Björnsson 1968 vorgeschlagen: der Lesbarkeitsindex LIX (im Originaltext 'Läsbarhetsindex'). Dieser ergibt sich aus der Summe der durschnittlichen Satzlänge eines Textes und des prozentualen Anteils langer Wörter (mehr als sechs Buchstaben). Auf diese Weise erhält man eine ungefähre Einschätzung der Schwierigkeit von Texten.
-> Quelle: https://www.psychometrica.de/lix.html
+> (Quelle: https://www.psychometrica.de/lix.html)
 
 ```python
     # …
@@ -148,7 +188,7 @@ Für die Silbenanzahlen, die für die Berechnung der Lesbarkeitsindizes benötig
 #### Wiener Sachtextformel
 
 > Die Wiener Sachtextformel dient zur Berechnung der Lesbarkeit deutschsprachiger Texte. Sie gibt an, für welche Schulstufe ein Sachtext geeignet ist. Die Skala beginnt bei Schulstufe 4 und endet bei 15, wobei ab der Stufe 12 eher von Schwierigkeitsstufen als von Schulstufen gesprochen werden sollte. Ein Wert von 4 steht demnach für sehr leichten Text, dagegen bezeichnet 15 einen sehr schwierigen Text. 
-> Quelle: Wikipedia, Wiener Sachtextformel
+> (Quelle: Wikipedia, Wiener Sachtextformel)
 
 ```python
     # …
@@ -173,7 +213,7 @@ Für die Silbenanzahlen, die für die Berechnung der Lesbarkeitsindizes benötig
 #### Flesch-Reading-Ease
 
 > Der Lesbarkeitsindex Flesch-Reading-Ease, auch Flesch-Grad genannt, ist ein numerischer Wert für die Lesbarkeit, der aus einem Text berechnet werden kann. Je höher der Wert ist, desto leichter verständlich ist der Text. Gut verständliche Texte weisen einen Wert von etwa 60 bis 70 auf. 
-> Quelle: Wikipedia, Flesch-Reading-Ease
+> (Quelle: Wikipedia, Flesch-Reading-Ease)
 
 ```python
     # …
@@ -187,4 +227,52 @@ Für die Silbenanzahlen, die für die Berechnung der Lesbarkeitsindizes benötig
 
 ```
 
-### TODO 
+### Referenzielle Kohäsion (Rekurrenz)
+
+Referenzielle Kohäsion oder Rekorrunz ist eine Möglichkeit um auf Textoberflächenebene den syntaktisch-semantischen Zusammenhang zu erhöhen und so die Textkohäsion zu verbessern. Im Sinner der Coh-Metrix werden referenzielle Kohäsionswerte auf Basis von wiederkehrenden Worten oder Wortbestandteilen berechnet.
+
+> Referential cohesion refers to overlap in content words between local sentences, or coreference. […] coreference is a linguaistic cue that can aid readers in making connections […] in their textbase understanding. 
+> (McNamara et al., 2014, S. 63ff)
+
+Das Modul `coreference` implementiert CRFNO, CRFAO, CRFSO, CRFCWO, CRFANP. 
+
+- Die Rekurrenz von Nomen wird mit `global_noun_overlap(text)` und `local_nout_overlap` berechnet. 
+- Die Rekurrenz von Argumenten (Nomen und Pronomen) wird mit `global_argument_overlap(text)` und `local_argument_overlap(text)` berechnet.
+- Die Rekurrenz von von Nomen, Pronomen und *Content Words* wird mit `global_stem_overlap(text)` und `local_stem_overlap(text)` berechnet.
+
+Die nötigen Wortartenerkennungen werden mit Hilfe des HanoverTagger durchgeführt. Die „lokalen“ Varianten vergleichen jeweils aufeinanderfolgende Sätze. Die „globalen“ Varianten vergleichen jede mögliche Paarkombination an Sätzen aus dem Text. Zurückgegeben wird jeweils die durchschnittliche Anzahl an Textvergleichen, in denen eine Rekurrenz vorgekommen ist.
+
+Die Rekurrenz von *Content Words* wird gemäß der Coh-Metrix Webtool Dokumentation anders berechnet.
+
+> This measure considers the proportion of explicit content words that overlap between pairs of sentences. For example, if a sentence pair has fewer words and two words overlap, the proportion is greater than if a pair has many words and two words overlap.
+> Quelle: http://cohmetrix.com/, Documentation
+
+Das wird vermutlich nicht 100% der Originalimplementierung entsprechen; ich habe mich jedoch für folgende Umsetzung entschieden. Den Anteil an überlappenden *Content Words* bestimme ich im Vergleich zu der Anzahl an insgesamt vorliegenden *Content Words* in beiden Vergleichssätzen zusammen.
+
+```python
+        content_words = {tag[0] for tag in pair[0] if tag[2] in content_word_tags}
+        other_content_words = {tag[0] for tag in pair[1] if tag[2] in content_word_tags}
+        count_inter = len(content_words.intersection(other_content_words))
+        count_union = len(content_words.union(other_content_words))
+        content_word_proportion =  count_inter / count_union
+```
+
+#### Anaphor overlap (fehlende Implementierung)
+
+> This measure considers the anphor overlap between pairs of sentences. A pair of sentences has an anphor overlap if the later sentence contains a pronoun that refers to a pronoun or noun in the earlier sentence. 
+> Quelle: http://cohmetrix.com/, Documentation
+
+Ich habe zu aktuellem Zeitpunkt keine Ahnung, wie ich das implementieren könnte. Diese Funktion ist nicht implementiert.
+
+#### Weitere TODOs
+
+In den Funktionen `global_argument_overlap(text)` und `local_argument_overlap(text)` soll laut Dokumentation von Coh-Metrix auch dann eine Rekurrenz gezählt werden, wenn das Nomen in einem Satz in Singularform und im anderen Satz in Pluralform vorliegt. Das ist in der aktuellen Version nicht berücksichtigt. 
+
+Analog kann auch in `global_stem_overlap(text)` und `local_stem_overlap(text)` in diesem Sinne falsch gezählt werden, wenn sich Wortstamm von Singular- und Pluralform unterscheiden.
+
+> There are different variants of the five measures coreference. Some indices consider only pairs of adjacent sentences, whereas others consider all possible pairs of sentences in a paragraph. When all possible pairs of sentences are considered, there is the distinction between weighted and unweighted metrics that are sensitive to the distance between sentences.
+> (Graesser & McNamara, 2011, 382)
+
+Anders als in der Dokumentation des Coh-Metrix Webtools wird hier darauf hingewiesen, dass bei den „globalen“ Kenngrößen jeweils der Abstand der verglichenen Sätze im Text berücksichtigt werden sollte.
+
+Das ist so noch nicht implementiert. In der jetzigen Version wird jeder Satzvergleich gleich gewichtet.
