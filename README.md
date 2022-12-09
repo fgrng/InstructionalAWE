@@ -74,6 +74,12 @@ Die Klasse ermöglicht Wortartenerkennung, Stemming und Lemmatisierung und verwe
 
 Über die Methoden `tagged_sentences()` und `tagged_words()` erhält man (je nach gesetztem `taglevel`) entsprechende Listen von Tupeln, die die einzelnen Wörter, Wortarten, etc. enthalten. Die Methoden `lemmatized_sentences()` und `lemmatized_words()` liefert die lemmatisierte Form der Wörter zurück; `stemmed_sentences()` und `stemmed_words()` liefert die Wortstämme zurück.
 
+### Semantische Räume für Latent Semantic Analysis
+
+Die `SemanticSpace`-Klasse ermöglicht die Repräsentation von Textkorpora und die Berechnung von semantischen Räumen. Die Klasse ist im Wesentlichen ein Wrapper um die entsprechenden Funktionalitäten aus `NLTK` und `scikit-learn`. Ein Korpus wird intern als Liste von `Text`-Objekten verwaltet.
+
+Die Methode `cosine(self, text_x, text_y)` erlaubt die Kosinus-Ähnlichkeit von zwei gegebenen `Text`-Objekten.
+
 ### Deskriptive Oberflächenmerkmale
 
 > „Coh-Metrix provides descriptive indices to help the user check the Coh-Metrix output (e.g., to make sure that the numbers make senes) and interpret patterns of data.
@@ -82,7 +88,7 @@ Die Klasse ermöglicht Wortartenerkennung, Stemming und Lemmatisierung und verwe
 Das Modul `descriptives` implementiert die Indikatoren DESPC, DESSC, DESWC, DESPL, DESSL, DESWL von Coh-Metrix.
 
 - Die Funktionen `number_of_*(text)` gibt die Anzahl an Absätzen, Sätzen oder Wörtern in dem gegebenen Textobjekt zurück.
-- Modul liefert verschieden Längenmaße für Textobjekte. Die Funktion `paragraph_length_in_sentences(text)` gibt die mittlere Länge der Absätze, gemessen in der Anzahl an Sätzen, dessen Standardabweichung und die Anzahl an Absätzen als Tripel zurück. Analog kann die mittlere Satzlänge in Wörten, die mittlere Wortlänge in Silben und die mittlere Wortlänge in Buchstaben bestimmt werden.
+- Das Modul liefert zusätzlich verschiedene Längenmaße für Textobjekte. Die Funktion `paragraph_length_in_sentences(text)` gibt die mittlere Länge der Absätze, gemessen in der Anzahl an Sätzen, dessen Standardabweichung und die Anzahl an Absätzen als Tripel zurück. Analog kann die mittlere Satzlänge in Wörten, die mittlere Wortlänge in Silben und die mittlere Wortlänge in Buchstaben bestimmt werden.
 
 Das Modul greift auch auf Funktionalitäten aus `NLTK` zurück. Für die Silbenerkennung wird das Paket `pyphen` verwendet. Mittelwert und Standardabweichung wird mit `statistics` berechnet.
 
@@ -278,7 +284,21 @@ Das ist so noch nicht implementiert. In der jetzigen Version wird jeder Satzverg
 
 ### Kohäsion auf Basis von Latent Semantic Analyses
 
-**TODO**
+Latent Semantic Analysis erlaubt es, die Anteile eines Text(ausschnitt)s an spezifischen Inhaltsdimension eines semantischen Raumes zu bestimmen. Ein  semantischer Raum muss für die Analyse der Texte vorbereitet werden und sichergestellt sein, dass die Inhaltsdimension des Raumes zu den Texten passen.
+
+In den Coh-Metrix wird LSA verwendet, um die interne semantische Kohäsion eines Textes anzunähern. Analog zu den Rekurrenz-Maßen werden die inhaltlichen Zusammenhänge zwischen Textabschnitten betrachtet (hier: Abstand bzw. Nähe der Projektionen im semantischen Raum). Das Modul `latent_semantic_analysis` implementiert hierfür LSASS, LSAPP, LSAGN aus den Coh-Metrix.
+
+- Die Funktionen `local_lsa_overlap_sentences(text, space)` und `global_lsa_overlap_sentences(text, space)` bestimmen die LSA-basierte Textkohäsion auf Basis von Satzvergleichen. Dabei wird die inhaltliche Nähe zweier Sätze im semantischen Raum über den Kosinus-Ähnlichkeit berechnet. Es wird die mittlere Kosinus-Ähnlichkeit der verglichenen Sätze, die Standardabweichung und die Anzahl der Vergleiche zurückgegeben.
+- Die Funktionen `local_lsa_overlap_paragraphs(text, space)` und `global_lsa_overlap_paragraphs(text, space)` bestimmen die LSA-basierte Textkohäsion durch Vergleich der Absätze.
+
+#### Relation von Gegebenen und Neuen Informationen (fehlende Implementierung)
+
+Die Coh-Metrix erlauben die Berechnung der „Gegebenheit“ von den Sätzen eines Textes. Die „Gegebenheit“ eines Satzes bemisst sich an der inhaltlichen Nähe zu allen vorherigen Sätzen des Textes.
+
+> LSA Given/New is calculated by constructing a hyperplane out of all previous vectors, rather than by simply adding vectors. The comparison vector (e.g. a current sentence in the text) is projected onto the hyperplane. The projection of the sentence vector onto the hyperplane is considered to be the component of the vector that is shared with the previous text, or given (G). The component of the vector that is perpendicular to the hyperplane is considered to be the component of the sentence that is new (N). […] When there is less given information (e.g. 10%) then G/N approaches 0 to indicate thet there is lower cohesion.
+> (McNamara, 2014, S. 66f)
+
+Die Berechnung dieser Kenngröße ist noch nicht implementiert.
 
 ### Lexikalische Diversität
 
