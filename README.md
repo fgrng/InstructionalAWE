@@ -19,37 +19,35 @@ Charbonnier, J., & Wartena, C. (2020). Predicting the concreteness of German Wor
 
 - [Coh-Metrx Webtool](http://cohmetrix.com/)
 - [Coh-Metrix-Port 2.0](https://github.com/nilc-nlp/coh-metrix-port)
-
 - Artikel [Vorverarbeitung von Texten mit Python und NLTK](https://textmining.wp.hs-hannover.de/Preprocessing.html) von Christian Wartena(?)
 - [Deutsches Wortart-Tagset STTS](https://www.cis.lmu.de/~schmid/tools/TreeTagger/data/STTS-Tagset.pdf)
 - [Hanover-Tagger „HanTa“](https://github.com/wartaal/HanTa)
-
 - [German dictionaries for Hunspell](https://www.j3e.de/ispell/igerman98/index_en.html)
 
 ### Weitere Ressourcen
 
-[German-NLP](https://github.com/adbar/German-NLP). „Curated list of open-access/open-source/off-the-shelf resources and tools developed with a particular focus on German“.
+Unter [German-NLP](https://github.com/adbar/German-NLP) findet man eine sehr hilfreiche „[c]urated list of open-access/open-source/off-the-shelf resources and tools developed with a particular focus on German“.
 
 Morphologie und Wortartenerkennung
 - [clevertagger](https://github.com/rsennrich/clevertagger). Mögliche Alternative für den Hanover-Tagger.
 - [The Zurich Morphological Analyzer for German](https://pub.cl.uzh.ch/users/sennrich/zmorge/)
 - [DEMorphy](https://github.com/DuyguA/DEMorphy).
 
-Ein paar Sammlungen für Textcorpora und Wortdatenbanken
+Ein paar Sammlungen für Textcorpora und Wortdatenbanken, die ich teilweise zum Testen bei der Implementierung verwendet habe.
 - [Textsammlungen und Datenbanken zur Verwendung des Deutschen – Materialien für Korpuslinguistik, Sprachwissenschaft und Sprachunterricht (DaF & DaZ)](https://www.sprache-spiel-natur.de/2020/06/14/textsammlungen-und-datenbanken-zur-verwendung-des-deutschen/) aus „Sprache, Spiel Natur“
 - [TIGER Korpus](https://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/tiger/)
 - [dlexDB](http://alpha.dlexdb.de/pages/api/)
 - [COSMAN II](https://cosmas2.ids-mannheim.de/cosmas2-web/) vom Leibniz-Institut für deutsche Sprache und Zugang zu den Korpora geschriebener Gegenwartssprache des IDS (DeReKo)
 - [GermaNet](https://uni-tuebingen.de/en/faculties/faculty-of-humanities/departments/modern-languages/department-of-linguistics/chairs/general-and-computational-linguistics/ressources/lexica/germanet/). Lexikalisch-semantisches Wortnetz der Universität Tübingen.
 
-Analyse von Grammatik und Syntax
+Die Implementierung von Analyseverfahren von Grammatik und Syntax steht noch aus. Mögliche Bibliotheken für die Umsetzung:
 - [The Zurich Dependency Parser for German](https://github.com/rsennrich/parzu) für die Analyse von Satzstrukturen
 - [BitPar](https://www.cis.lmu.de/~schmid/tools/BitPar/). Ein Grammatik-Parser (auch) für die deutsche Sprache.
 - [jwcdg](https://gitlab.com/nats/jwcdg) „is a constraint-based dependency parser for natural language sentences“.
 
 ## Installation und Bedienung 
 
-TODO
+**TODO*
 
 ## Bestandteile des Projekts
 
@@ -72,7 +70,6 @@ Die Klasse ermöglicht Wortartenerkennung, Stemming und Lemmatisierung und verwe
 
 Über die Methoden `tagged_sentences()` und `tagged_words()` erhält man (je nach gesetztem `taglevel`) entsprechende Listen von Tupeln, die die einzelnen Wörter, Wortarten, etc. enthalten. Die Methoden `lemmatized_sentences()` und `lemmatized_words()` liefert die lemmatisierte Form der Wörter zurück; `stemmed_sentences()` und `stemmed_words()` liefert die Wortstämme zurück.
 
-
 ### Deskriptive Oberflächenmerkmale
 
 > „Coh-Metrix provides descriptive indices to help the user check the Coh-Metrix output (e.g., to make sure that the numbers make senes) and interpret patterns of data.
@@ -93,47 +90,44 @@ Das Modul `word_information` implementiert WRDNOUN, WRDVORB, WRDARJ, WRDADV, WRD
 - Zusätzlich kann die Inzidenz von *Content Words* und *Function Words* bestimmt werden. *Content Words* habe ich für die deutsche Sprache grob als Autosemantika verstanden; *Function Words* entsprechend als Synsemantika, und wie folgt implementiert: 
     ```python
     content_word_tags = noun_tags + lexical_verb_tags + adjective_tags + adverb_tags + foreign_tags
-    ```
-    bzw. 
+    ```bzw. 
     ```python
     function_word_tags = article_tags + conjunction_tags + particle_tags + pronoun_tags + adposition_tags + modal_verb_tags + auxiliary_verb_tags
     ```
-    .
 - Für die Berechnungen von Promonen-Inzidenzen habe ich adhoc von Hand Matching-Lister erstellt, etwa `matching_list = ["du", "dich", "dir", "deiner", "Du", "Dich", "Dir", "Deiner"]` für die Inzidenz von Pronomen der zweiten Person in `second_person_pronoun_incidence(text)`.
-```python
-def first_person_singular_pronoun_incidence(text):
-    # …
-    matching_list = ["ich", "mich", "mir", "meiner"]
-    # …
+    ```python
+    def first_person_singular_pronoun_incidence(text):
+        # …
+        matching_list = ["ich", "mich", "mir", "meiner"]
+        # …
 
-def first_person_plural_pronoun_incidence(text):
-    # …
-    matching_list = ["wir", "uns", "unser"]
-    # …
+    def first_person_plural_pronoun_incidence(text):
+        # …
+        matching_list = ["wir", "uns", "unser"]
+        # …
 
-def second_person_pronoun_incidence(text):
-    # …
-    matching_list = ["du", "dich", "dir", "deiner", "Du", "Dich", "Dir", "Deiner"]
-    # matching_list += ["ihr", "euch", "euer", "eu", "Ihr", "Euch", "Euer", "Eu"]
-    # …
+    def second_person_pronoun_incidence(text):
+        # …
+        matching_list = ["du", "dich", "dir", "deiner", "Du", "Dich", "Dir", "Deiner"]
+        # matching_list += ["ihr", "euch", "euer", "eu", "Ihr", "Euch", "Euer", "Eu"]
+        # …
 
-def third_person_singular_pronoun_incidence(text):
-    # …
-    matching_list = ["er", "sie", "es", "ihn", "ihm", "seiner", "ihrer"]
-    # …
+    def third_person_singular_pronoun_incidence(text):
+        # …
+        matching_list = ["er", "sie", "es", "ihn", "ihm", "seiner", "ihrer"]
+        # …
 
-def third_person_plural_pronoun_incidence(text):
-    # …
-    matching_list = ["sie","Sie", "ihnen", "Ihnen", "ihrer", "Ihrer"]
-    # …
-
-```
+    def third_person_plural_pronoun_incidence(text):
+        # …
+        matching_list = ["sie","Sie", "ihnen", "Ihnen", "ihrer", "Ihrer"]
+        # …
+    ```
 
 ### Häufigkeiten von Wörtern in globalen Lexika
 
 Die originalen Coh-Metrix verwenden das CELEX-Wörterbuch, um die Häufigkeit der im Textobjekt verwendeten Wörter in globalen Lexika nachzuschlagen. Für das Modul `word_information` habe ich diese Funktionlitäten für das DWDS-Lexikon implementiert.
 
-Die API von https://www.dwds.de/d/api ist in `awe_foreign.dwds.py` implementiert.
+Die API von https://www.dwds.de/d/api ist in `awe_foreign/dwds.py` implementiert.
 
 Auf Basis der Daten von DWDS wird die mittlere Häufigkeit der *Content Words* / Autosemantika berechnet. Analog kann die mittlere log-Häufigkeit und der Mittelwert der jeweiligen minimalen log-Häufigkeit der Wörter in den einzelnen Sätzen eines Textes bestimmt werden. 
 
@@ -160,9 +154,9 @@ def meaningfulness_colorodo_content_words(text):
 
 ### Polysemie und Hypernomie
 
-Die originalen Coh-Metrix bieten Berechnungsfunktionen auf Basis der Polysemie und Hypernomie von *Content Words*, Nomen und Verben im Textobjekt an. Da ich hierfür kein frei verfügbares Wörterbuch gefunden habe, versuche ich die Funktionalität über einen Wiktionary-Parser nachzuahmen.
+Die originalen Coh-Metrix bieten Berechnungsfunktionen auf Basis der Polysemie und Hypernomie von *Content Words**, Nomen und Verben im Textobjekt an. Da ich hierfür kein frei verfügbares Wörterbuch gefunden habe, versuche ich die Funktionalität über einen Wiktionary-Parser nachzuahmen.
 
-TODO
+**TODO**
 
 ### Lesbarkeitsindizes
 
@@ -260,7 +254,7 @@ Das wird vermutlich nicht 100% der Originalimplementierung entsprechen; ich habe
 #### Anaphor overlap (fehlende Implementierung)
 
 > This measure considers the anphor overlap between pairs of sentences. A pair of sentences has an anphor overlap if the later sentence contains a pronoun that refers to a pronoun or noun in the earlier sentence. 
-> Quelle: http://cohmetrix.com/, Documentation
+> (Quelle: http://cohmetrix.com/, Documentation)
 
 Ich habe zu aktuellem Zeitpunkt keine Ahnung, wie ich das implementieren könnte. Diese Funktion ist nicht implementiert.
 
@@ -271,8 +265,32 @@ In den Funktionen `global_argument_overlap(text)` und `local_argument_overlap(te
 Analog kann auch in `global_stem_overlap(text)` und `local_stem_overlap(text)` in diesem Sinne falsch gezählt werden, wenn sich Wortstamm von Singular- und Pluralform unterscheiden.
 
 > There are different variants of the five measures coreference. Some indices consider only pairs of adjacent sentences, whereas others consider all possible pairs of sentences in a paragraph. When all possible pairs of sentences are considered, there is the distinction between weighted and unweighted metrics that are sensitive to the distance between sentences.
-> (Graesser & McNamara, 2011, 382)
+> (Graesser & McNamara, 2011, 382**
 
 Anders als in der Dokumentation des Coh-Metrix Webtools wird hier darauf hingewiesen, dass bei den „globalen“ Kenngrößen jeweils der Abstand der verglichenen Sätze im Text berücksichtigt werden sollte.
 
 Das ist so noch nicht implementiert. In der jetzigen Version wird jeder Satzvergleich gleich gewichtet.
+
+### Kohäsion auf Basis von Latent Semantic Analyses
+
+**TODO**
+
+### Lexikalische Diversität
+
+**TODO**
+
+### Konjunktionen / Connectves
+
+**TODO**
+
+### Situationsmodell
+
+**TODO**
+
+### Syntaktische Komplexität
+
+**TODO**
+
+### Dichte von syntaktischen Mustern
+
+**TODO**
